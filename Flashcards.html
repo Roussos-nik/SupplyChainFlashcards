@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SESM6049 — Flashcards</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0e1116;
+            --bg-2: #161a22;
+            --ink: #eef0f3;
+            --ink-dim: #a4adbd;
+            --line: #262b36;
+            --accent: #ffcc66;
+            --accent-2: #7dd3fc;
+            --good: #7ee787;
+            --warn: #ff7b72;
+            --card: #1a1f2a;
+            --card-back: #1d2533;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif
+        }
+
+        body {
+            background:
+                radial-gradient(1200px 600px at 80% -10%, rgba(125, 211, 252, .08), transparent 60%),
+                radial-gradient(900px 500px at -10% 120%, rgba(255, 204, 102, .06), transparent 60%),
+                var(--bg);
+            min-height: 100vh;
+            padding: 48px 24px 96px;
+        }
+
+        header.top {
+            max-width: 1200px;
+            margin: 0 auto 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        header.top .eyebrow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        header.top h1 {
+            font-family: 'Fraunces', serif;
+            font-weight: 900;
+            font-size: clamp(36px, 5vw, 64px);
+            margin: 0;
+            line-height: 1;
+            letter-spacing: -.02em;
+        }
+
+        header.top .sub {
+            color: var(--ink-dim);
+            max-width: 780px;
+            font-size: 15px;
+            line-height: 1.55;
+            margin-top: 10px;
+        }
+
+        .controls {
+            max-width: 1200px;
+            margin: 24px auto 28px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: var(--bg-2);
+        }
+
+        .controls input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            background: #0e1218;
+            color: var(--ink);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .controls input[type="text"]:focus {
+            border-color: var(--accent-2)
+        }
+
+        .controls button,
+        .topic-btn {
+            background: transparent;
+            color: var(--ink);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            letter-spacing: .06em;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all .15s ease;
+        }
+
+        .controls button:hover,
+        .topic-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .topic-btn.active {
+            background: var(--accent);
+            color: #1a1300;
+            border-color: var(--accent);
+        }
+
+        .stats {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--ink-dim);
+            margin-left: auto;
+        }
+
+        .topic-bar {
+            max-width: 1200px;
+            margin: 0 auto 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .deck {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            perspective: 1500px;
+            height: 280px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform .55s cubic-bezier(.4, .05, .3, 1);
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg)
+        }
+
+        .card-face {
+            position: absolute;
+            inset: 0;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 20px 22px;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card-front {
+            background: linear-gradient(160deg, var(--card) 0%, #1f2735 100%);
+        }
+
+        .card-back {
+            background: linear-gradient(160deg, var(--card-back) 0%, #202a3b 100%);
+            transform: rotateY(180deg);
+        }
+
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .q {
+            font-family: 'Fraunces', serif;
+            font-weight: 500;
+            font-size: 20px;
+            line-height: 1.3;
+            color: var(--ink);
+            flex: 1;
+        }
+
+        .a {
+            font-family: 'Inter', sans-serif;
+            font-size: 13.5px;
+            line-height: 1.55;
+            color: var(--ink);
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .a::-webkit-scrollbar {
+            width: 5px
+        }
+
+        .a::-webkit-scrollbar-thumb {
+            background: #3a4250;
+            border-radius: 5px
+        }
+
+        .a strong {
+            color: var(--accent)
+        }
+
+        .a em {
+            color: var(--accent-2);
+            font-style: normal;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px
+        }
+
+        .a ul {
+            margin: 6px 0;
+            padding-left: 18px
+        }
+
+        .a li {
+            margin: 3px 0
+        }
+
+        .flip-hint {
+            position: absolute;
+            bottom: 12px;
+            right: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9.5px;
+            color: var(--ink-dim);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            opacity: .7;
+        }
+
+        .section-divider {
+            max-width: 1200px;
+            margin: 48px auto 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--line);
+        }
+
+        .section-divider span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--accent);
+            letter-spacing: .18em;
+            text-transform: uppercase;
+        }
+
+        .no-results {
+            max-width: 1200px;
+            margin: 60px auto;
+            text-align: center;
+            color: var(--ink-dim);
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            font-size: 18px;
+        }
+
+        footer {
+            max-width: 1200px;
+            margin: 80px auto 0;
+            padding-top: 24px;
+            border-top: 1px solid var(--line);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--ink-dim);
+            letter-spacing: .06em;
+        }
+
+        @media(max-width:600px) {
+            body {
+                padding: 24px 14px 60px
+            }
+
+            .card {
+                height: auto;
+                min-height: 260px
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="top">
+        <div class="eyebrow">SESM6049 · Materials, Manufacturing & Supply Chain Management</div>
+        <h1>Flashcards</h1>
+        <div class="sub">Click any card to flip. Use the search bar to filter by keyword, or tap a topic chip to narrow
+            the deck. Past-paper question types are emphasised: forecasting steps, EOQ derivation, MRP terminology, OEE,
+            FMEA, ISO 9001/14001, PDCA, LCA phases, functional units, system boundaries, supplier selection, logistics
+            modes, digital technologies, circular economy, reverse logistics.</div>
+    </header>
+
+    <div class="topic-bar" id="topicBar"></div>
+
+    <div class="controls">
+        <input id="searchBox" type="text" placeholder="Search flashcards (e.g. EOQ, FMEA, functional unit, PDCA)…">
+        <button id="shuffleBtn">Shuffle</button>
+        <button id="resetBtn">Reset</button>
+        <button id="flipAllBtn">Flip All</button>
+        <span class="stats" id="stats"></span>
+    </div>
+
+    <div class="deck" id="deck"></div>
+    <div class="no-results" id="noResults" style="display:none">No flashcards match — try different keywords.</div>
+
+    <footer>
+        Built from SESM6049 lecture notes (SCM, Logistics, Inventory, Forecasting, Production Engineering, Quality,
+        Facilities Layout, Material Tracking, LCA, Sustainability) and past papers 2022-23, 2023-24, 2024-25.
+    </footer>
+
+    <script>
+        const cards = [
+            /* ============================================================
+               TOPIC: SUPPLY CHAIN MANAGEMENT — Introduction
+               ============================================================ */
+            { topic: "SCM", q: "What is a supply chain?", a: "The flow of products and services from <strong>suppliers → raw-material manufacturers → intermediate-goods manufacturers → finished-goods manufacturers → distributors/wholesalers → retailers → customers</strong>, connected through transportation, information, and exchanges of funds." },
+            { topic: "SCM", q: "Define Supply Chain Management.", a: "The management of supply chain assets and product, information, and fund flows to <strong>maximise total supply chain surplus</strong>. It is about getting the right things to the right places at the right times for profit." },
+            { topic: "SCM", q: "What are the four important elements of SCM?", a: "<ul><li><strong>Purchasing</strong>: supplier alliances, supplier management, strategic sourcing.</li><li><strong>Operations</strong>: demand management, MRP, ERP, JIT, TQM.</li><li><strong>Distribution</strong>: transportation management, customer relationship management, network design, service response logistics.</li><li><strong>Integration</strong>: coordination/integration activities, global integration, performance measurement.</li></ul>" },
+            { topic: "SCM", q: "What are the 4 reasons managing a supply chain is not easy?", a: "<ul><li>Geographically dispersed complex network.</li><li>Conflicting objectives across the supply chain.</li><li>Uncertainty and risk factors (geopolitics, pandemics, tariffs).</li><li>Information distortion → the <strong>bullwhip effect</strong>.</li></ul>" },
+            { topic: "SCM", q: "What is the bullwhip effect?", a: "A phenomenon where small variations in customer demand are amplified as orders move upstream through the supply chain, leading retailers, distributors, manufacturers, and suppliers to make progressively larger forecast errors and inventory swings. Caused by independent forecasting and lack of information sharing." },
+            { topic: "SCM", q: "What are the three decision phases in supply chain management?", a: "<ul><li><strong>Strategic / Design</strong> (years): network design, plant locations and capacities, sell direct vs. retail, outsource vs. in-house, product mix.</li><li><strong>Planning</strong> (3 months – 1 year): workforce & production planning, inventory policies (safety stock), which locations supply which markets, transportation strategies.</li><li><strong>Operational</strong> (daily): production scheduling, individual order decisions, replenishment orders.</li></ul>" },
+            { topic: "SCM", q: "Explain the cycle view of supply chain processes.", a: "Supply chain processes are split into a series of cycles between successive stages: <strong>Customer Order Cycle, Replenishment Cycle, Manufacturing Cycle, Procurement Cycle</strong>. Each cycle defines processes and the owner of each process. Useful for <em>operational</em> decisions." },
+            { topic: "SCM", q: "Explain the push/pull view of supply chain processes.", a: "Processes are divided based on timing relative to a customer order:<ul><li><strong>Pull processes</strong>: executed in response to a customer order (reactive).</li><li><strong>Push processes</strong>: executed in anticipation of customer orders (speculative).</li></ul>Useful for <em>strategic</em> decisions about the push-pull boundary." },
+            { topic: "SCM", q: "Name the key trends in modern SCM.", a: "<ul><li><strong>AI & predictive analytics</strong>: better forecasting, risk management.</li><li><strong>Hyperautomation & robotics</strong>: warehousing automation.</li><li><strong>Sustainability & ESG integration</strong>: CBAM, CSDDD, Scope 3 emissions.</li><li><strong>Resilience & nearshoring</strong>: diversification away from single regions.</li><li><strong>Visibility & digital twins</strong>: end-to-end transparency.</li><li><strong>Cost-to-serve optimisation</strong>: granular profitability data.</li></ul>" },
+
+            /* ============================================================
+               TOPIC: LOGISTICS
+               ============================================================ */
+            { topic: "Logistics", q: "List the modes of transportation.", a: "<ul><li><strong>Overland</strong>: Road (trucks, cars), Rail.</li><li><strong>Seaborne (Water)</strong>: Maritime open waters, Waterways.</li><li><strong>Airborne</strong>: Airplanes, Drones.</li></ul>" },
+            { topic: "Logistics", q: "What are the characteristics of maritime transportation?", a: "Dominant mode in international trade (~90% of global trade). Cheaper and larger capacity than air. Cargo handled at ports.<br><strong>Issues</strong>: terminal handling capability, weather, ship size, port access (depth, channel, tides), vulnerability to disruption (e.g. Suez Canal blockage cost ~$400 m/hr)." },
+            { topic: "Logistics", q: "What are the two main types of dry cargo ships?", a: "<ul><li><strong>Bulk carriers</strong>: homogeneous goods (coal, wheat).</li><li><strong>Container ships</strong>: miscellaneous cargo. Largest can carry >21,000 TEUs and exceed 400 m in length.</li></ul>Plus <strong>tankers</strong> (oil, water, wine — liquids in bulk)." },
+            { topic: "Logistics", q: "What is liner shipping?", a: "Transportation of cargo using vessels operating on a <strong>fixed schedule along a set route</strong> or network of ports. Reliable, regular service, mainly for container shipping." },
+            { topic: "Logistics", q: "What are advantages and issues of road transportation?", a: "<strong>Advantages</strong>: door-to-door without intermediate handling, near-universal access, feasible for short distances, route flexibility, less prone to theft, high competition keeps freight rates low.<br><strong>Issues</strong>: environmental concerns, weekend driving restrictions, driving-hours limits (EU max 56h/week, 9h/day, 90h/2 weeks), Less-than-Truckload vs. Full-Truckload trade-offs." },
+            { topic: "Logistics", q: "What are the advantages and issues of rail transportation?", a: "<strong>Advantages</strong>: cost-effective for bulk goods over long distances, lower emissions per ton-mile, intermodal flexibility, high capacity for continental moves (e.g. China–Europe).<br><strong>Issues</strong>: high fixed costs (track, terminals), not all shippers have rail access, dimension limits, gauge variance between countries, slower speeds (passenger trains have priority), bureaucracy." },
+            { topic: "Logistics", q: "What are the characteristics of air transportation?", a: "~1% of international trade by volume but 20–30% by value. Ideal for high-value, low-volume, time-sensitive goods.<br><strong>Advantages</strong>: fast, low risk of damage/theft, cost-effective when inventory and customer-service costs are considered.<br>Cargo travels in passenger plane <strong>belly cargo</strong> (~40% of capacity in 2021) and dedicated freighters (~60%). Many passenger flights only profitable due to cargo." },
+            { topic: "Logistics", q: "Define multimodal vs. intermodal transportation.", a: "<ul><li><strong>Multimodal</strong>: carriage of goods by one or more transport modes.</li><li><strong>Intermodal</strong>: movement of goods in the <strong>same loading unit</strong> (container) with systematic transfer between modes with minimal handling and total transit time.</li></ul>" },
+            { topic: "Logistics", q: "What is a 3PL and a 4PL?", a: "<ul><li><strong>3PL (3rd Party Logistics)</strong>: <em>asset-based</em> firm owning transport equipment, warehouses, distribution centres. Provides holistic services (collection, loading, unloading, delivery, warehousing, freight tracking via EDI/RFID/satellite, inventory management). Takes a supply chain view.</li><li><strong>4PL (4th Party Logistics)</strong>: <em>non-asset-based</em>; specialises in comprehensive information services that facilitate supply chain arrangements.</li></ul>" },
+            { topic: "Logistics", q: "What are the main types of warehouses?", a: "<ul><li><strong>Material warehouse</strong> (inbound).</li><li><strong>Finished product warehouse</strong> (outbound).</li><li><strong>Spare-parts warehouse</strong>.</li><li><strong>Distribution centre</strong>.</li><li><strong>Cross-docking warehouse</strong>.</li></ul>" },
+            { topic: "Logistics", q: "What is cross-docking?", a: "A logistics technique in retail/trucking where incoming shipments from disparate sources are <strong>transferred directly to outgoing trailers without storage in between</strong>. Allows rapid consolidation of shipments and economies of scale in outbound transport." },
+            { topic: "Logistics", q: "What is last-mile logistics?", a: "The <strong>final leg of a B2C delivery</strong> from a transport hub to the recipient (home or collection point). Usually involves Courier, Express & Parcel (CEP) services. <strong>~50% of total delivery cost</strong> sits in the last mile." },
+            { topic: "Logistics", q: "What facilities can sit between manufacturer and customer?", a: "<ul><li><strong>Distribution centres</strong>: stock and dispatch.</li><li><strong>Consolidation centres</strong>: combine smaller shipments into one.</li><li><strong>Cross-docks</strong>: pass-through with no storage.</li></ul>" },
+
+            /* ============================================================
+               TOPIC: INVENTORY MANAGEMENT
+               ============================================================ */
+            { topic: "Inventory", q: "Define inventory and inventory management.", a: "<strong>Inventory</strong>: any quantifiable item stored and used in an operation to satisfy a customer demand.<br><strong>Inventory management</strong>: planning and controlling of inventory to meet the competitive priorities of the operation. Created to compensate for the timing differences between supply and demand." },
+            { topic: "Inventory", q: "What are the three day-to-day inventory decisions?", a: "<ul><li><strong>How to control the system</strong>: procedures, priorities for stock items, how to store information.</li><li><strong>How much to order</strong> (volume decision): order quantity at each replenishment.</li><li><strong>When to order</strong> (timing decision): time or stock level that triggers an order.</li></ul>" },
+            { topic: "Inventory", q: "Why do firms keep stocks of products?", a: "<ul><li>Insurance against demand uncertainty/inaccurate forecasts.</li><li>Counteract lack of flexibility in production (large batches).</li><li>Take short-term market opportunities.</li><li>Anticipate future demand to ensure availability.</li><li>Reduce overall costs through bulk purchasing.</li><li>Increase in value (e.g. wine, whiskey).</li><li>Fill processing pipeline to ensure capacity utilisation.</li></ul>" },
+            { topic: "Inventory", q: "List 5+ reasons inventory management is important.", a: "<strong>Holding stock is costly</strong>: ties up working capital, takes up space, requires people. <strong>Not holding stock is risky</strong>: stockouts and lost sales. Other reasons:<ul><li>Storage and admin costs.</li><li>Damage if stored too long or inappropriately.</li><li>Obsolescence (technology/taste change).</li><li>Loss/shrinkage on warehouse shelves.</li><li>Hazardous material requires special storage.</li><li>Goal: minimise inventory while maintaining desired service level.</li></ul>" },
+            { topic: "Inventory", q: "What are the main types of inventory?", a: "<ul><li><strong>Raw material</strong>: ingredients, components, sub-assemblies.</li><li><strong>Work in Progress (WIP)</strong>: semi-finished goods.</li><li><strong>Finished goods</strong>: ready for dispatch.</li><li><strong>Cycle inventory</strong>: from batch production.</li><li><strong>Buffer / Safety stock</strong>: insurance against uncertainty.</li><li><strong>Anticipation inventory</strong>: predicted demand peaks (seasonal).</li><li><strong>Pipeline / in-transit inventory</strong>: between sites.</li></ul>" },
+            { topic: "Inventory", q: "What are the four cost components of inventory?", a: "<ul><li><strong>Item cost</strong>: cost per unit/SKU; quantity discounts possible.</li><li><strong>Ordering (setup) cost</strong>: paperwork, data entry, worker time, transport. Typically fixed per order.</li><li><strong>Carrying (holding) cost</strong>: capital cost, storage (space, insurance, tax), obsolescence/deterioration/loss. ~35% of SKU cost per year in the US.</li><li><strong>Stockout cost</strong>: backorder costs, lost income, customer dissatisfaction.</li></ul>" },
+            { topic: "Inventory", q: "What is inventory turnover and why does it matter?", a: "Ratio of <strong>annual sales to average inventory</strong> held throughout the year. Higher turnover = lower inventory cost. Varies hugely by industry: supermarkets up to 100; traditional manufacturers 7–8 may be acceptable." },
+            { topic: "Inventory", q: "What is ABC analysis?", a: "A way to categorise inventory by value and usage:<ul><li><strong>A items</strong>: highest value, ~20% of quantity, ~80% of value (e.g. car engines, gearboxes).</li><li><strong>B items</strong>: ~25–30% qty, ~10–15% value (e.g. seats, wheels).</li><li><strong>C items</strong>: ~50–55% qty, ~5–10% value (e.g. fixings, cables).</li></ul>SKU = Stock Keeping Unit. <em>All</em> categories matter — each needs its own strategy balancing stockout cost vs. carrying cost." },
+            { topic: "Inventory", q: "What are the steps for ABC analysis?", a: "<ol><li>Calculate total value of each item (unit cost × usage).</li><li>Rank items by total value (largest to smallest).</li><li>Sum quantities and values.</li><li>Calculate individual % of qty and value.</li><li>Calculate cumulative % of qty and value.</li><li>Classify into A, B, C from the cumulative pattern.</li></ol>" },
+            { topic: "Inventory", q: "Compare the three inventory order models.", a: "<ul><li><strong>Fixed Order Quantity</strong>: same quantity each time, variable interval.</li><li><strong>Fixed Order Period</strong>: equal time intervals, variable quantity.</li><li><strong>Economic Order Quantity (EOQ)</strong>: cost-minimising quantity based on annual demand, ordering cost, holding cost, unit cost.</li></ul>" },
+            { topic: "Inventory", q: "What is EOQ and what are its assumptions?", a: "The <strong>Economic Order Quantity</strong> is the optimal order quantity that minimises total inventory cost.<br><strong>Assumptions</strong>:<ul><li>Demand is known with certainty and constant over time.</li><li>No shortages allowed.</li><li>Lead time for orders is constant.</li><li>The order quantity is received all at once.</li></ul>" },
+            { topic: "Inventory", q: "How is the EOQ formula derived?", a: "Total cost = annual ordering cost + annual carrying cost: <em>TC = (C₀·D/Q) + (Cc·Q/2)</em>. Optimum is where the two cost curves cross (or by setting dTC/dQ = 0). Setting <em>C₀·D/Q = Cc·Q/2</em> gives <em>Q² = 2C₀D/Cc</em>, so <strong>Q_opt = √(2C₀D/Cc)</strong>. Where D = annual demand, C₀ = order/setup cost, Cc = carrying cost per unit per year." },
+            { topic: "Inventory", q: "What is the reorder point (ROP) under certainty?", a: "The stock level that triggers an order. With lead time L and demand rate d per period: <em>R = d × L</em>.<br>Example: 10,000 gal/yr, 311 working days → daily demand = 32.15 gal/day; with L = 10 days, R = 321.5 gal." },
+            { topic: "Inventory", q: "How do you set a reorder point under uncertain demand?", a: "Demand is given as a mean, leading to potential stockouts. <strong>Safety stock</strong> is added during lead time. <strong>Service level</strong> = probability(lead-time demand &lt; R). For normally distributed demand: <em>R = d·L + z·σ√L</em>, where z is the number of standard deviations corresponding to the service level (e.g. z = 1.65 for 95%)." },
+            { topic: "Inventory", q: "How is safety stock calculated?", a: "<em>Safety stock = z·σ·√L</em>, where z is the service-level z-score, σ is the standard deviation of demand per period and L is the lead time. Adds buffer to cover demand variability during lead time." },
+
+            /* ============================================================
+               TOPIC: FORECASTING
+               ============================================================ */
+            { topic: "Forecasting", q: "What is the difference between forecasting, planning, and demand management?", a: "<ul><li><strong>Forecasting</strong>: drives all other business decisions; predicts what will happen.</li><li><strong>Planning</strong>: organises resources (scheduling, future needs, acquisition) in anticipation of the forecast.</li><li><strong>Demand management</strong>: the process of <em>influencing</em> demand (promotions, advertising).</li></ul>" },
+            { topic: "Forecasting", q: "On what business functions does forecasting impact?", a: "<ul><li><strong>Marketing</strong>: demand estimates, future trends.</li><li><strong>Finance</strong>: budgets, stock prices.</li><li><strong>Operations</strong>: capacity planning, scheduling, inventory levels.</li><li><strong>Sourcing</strong>: purchasing decisions, supplier selection.</li></ul>Across the supply chain, independent forecasting causes mismatch and the bullwhip effect." },
+            { topic: "Forecasting", q: "State the three principles of forecasting.", a: "<ol><li>Forecasts are <strong>rarely perfect</strong>.</li><li>Forecasts are more accurate for <strong>groups</strong> than for individual items.</li><li>Forecasts are more accurate for <strong>shorter</strong> time horizons than longer ones.</li></ol>" },
+            { topic: "Forecasting", q: "List the steps in the forecasting process.", a: "<ol><li>Decide what to forecast.</li><li>Analyse appropriate data — identify patterns: <em>level/horizontal, trend, seasonality, cycles</em>; plus random variation.</li><li>Select the forecasting model best suited to the data pattern.</li><li>Generate the forecast.</li><li>Monitor forecast accuracy — measure error and improve.</li></ol>" },
+            { topic: "Forecasting", q: "What factors guide the choice of a forecasting method?", a: "<ul><li>Amount and type of available data.</li><li>Degree of accuracy required.</li><li>Length of forecast horizon.</li><li>Patterns in the data (level, trend, seasonality, cycles).</li></ul>" },
+            { topic: "Forecasting", q: "What are the two main groups of forecasting methods?", a: "<ul><li><strong>Qualitative (judgmental)</strong>: based on subjective opinion. Useful for new products, customer-buying patterns. Methods: Executive Opinion, Market Research (surveys/interviews), Delphi Method (anonymous expert consensus).</li><li><strong>Quantitative</strong>: mathematical, objective, consistent, handles large data sets. Two sub-types: Time Series and Causal models.</li></ul>" },
+            { topic: "Forecasting", q: "What are time series forecasting models?", a: "Forecast generated from a time-ordered list of past data of the variable being forecast. Models include:<ul><li>Mean (simple average).</li><li>Moving Averages (and Weighted MA).</li><li>Exponential Smoothing.</li><li>Trend-Adjusted Exponential Smoothing.</li><li>Seasonality Adjustment (multiplicative).</li></ul>" },
+            { topic: "Forecasting", q: "How does the Mean forecasting method work?", a: "<em>F_(t+1) = ΣD_t / n</em> — average of all past data points. Appropriate for level data patterns. Forecasts become more stable over time as n grows. Doesn't adapt to recent changes." },
+            { topic: "Forecasting", q: "How does the Moving Average forecasting method work?", a: "<em>F_(t+1) = average of n most recent observations</em>. Appropriate for level data; the smaller n, the more responsive (and noisier) the forecast. Older data are dropped as newer data arrive." },
+            { topic: "Forecasting", q: "What is a Weighted Moving Average?", a: "Same idea as a moving average, but managers can <strong>specify the weights</strong> applied to each data point (weights sum to 1). Weighting recent observations more heavily makes the forecast more responsive. Example: 0.2·D_(t-2) + 0.3·D_(t-1) + 0.5·D_t." },
+            { topic: "Forecasting", q: "What is Exponential Smoothing?", a: "Weighted average using a smoothing coefficient α (0 to 1):<br><em>F_(t+1) = α·D_t + (1−α)·F_t</em>.<br>Higher α = more responsive to recent data. Need an initial forecast to start. Only one parameter; uses all past data implicitly." },
+            { topic: "Forecasting", q: "What is Trend-Adjusted Exponential Smoothing?", a: "Modifies forecast for a data trend using two coefficients (α, β):<br><em>F_(t+1) = α·D_t + (1−α)·F_t</em><br><em>T_(t+1) = β·(F_(t+1) − F_t) + (1−β)·T_t</em><br><em>FIT_(t+1) = F_(t+1) + T_(t+1)</em><br>Where FIT = Forecast Including Trend." },
+            { topic: "Forecasting", q: "How is a seasonality adjustment applied?", a: "<ol><li>Compute average demand for each season (annual demand ÷ number of seasons).</li><li>Compute a <strong>seasonal index</strong> for each season (season demand ÷ year average); average across years.</li><li>Adjust next year's average forecast: <em>SAF_season = (Forecast / number of seasons) × seasonal index</em>.</li></ol>" },
+            { topic: "Forecasting", q: "What is a causal forecasting model?", a: "Assumes the variable being forecast is related to other variables in the environment.<ul><li><strong>Linear regression</strong>: straight-line relationship between one independent variable X and one dependent variable Y.</li><li><strong>Multiple regression</strong>: extends to multiple independent variables.</li></ul>" },
+            { topic: "Forecasting", q: "Give the linear regression equation and the formulas for its parameters.", a: "<em>Y = a + bX</em><br><em>b = (ΣXY − n·X̄·Ȳ) / (ΣX² − n·X̄²)</em><br><em>a = Ȳ − b·X̄</em><br>Where Y = dependent variable, X = independent variable, a = Y-intercept, b = slope, n = data points." },
+            { topic: "Forecasting", q: "Give the multiple regression equation.", a: "<em>Y = β₀ + β₁X₁ + β₂X₂ + … + β_kX_k</em><br>β₀ = intercept; β₁…β_k = coefficients showing the influence of each independent variable. Used when the dependent variable depends on more than one driver." },
+            { topic: "Forecasting", q: "What are MAD and MSE?", a: "Two measures of forecast accuracy. Forecast error <em>e_t = D_t − F_t</em>.<ul><li><strong>MAD (Mean Absolute Deviation)</strong>: <em>Σ|e_t|/n</em>.</li><li><strong>MSE (Mean Squared Error)</strong>: <em>Σe_t²/n</em>.</li></ul>Lower value = better forecast." },
+            { topic: "Forecasting", q: "How do MAD and MSE differ?", a: "<ul><li><strong>Error weighting</strong>: MAD weights all errors equally; MSE penalises large errors (squared).</li><li><strong>Outliers</strong>: MAD is more robust; MSE is sensitive to outliers.</li><li><strong>Mathematics</strong>: MSE differentiable, easier for optimisation; MAD uses absolute values.</li><li><strong>Interpretation</strong>: MAD has same units as data; MSE has squared units.</li></ul>Use MAD when outliers are likely; use MSE when penalising large errors matters or for optimisation." },
+            { topic: "Forecasting", q: "What is CPFR?", a: "<strong>Collaborative Planning, Forecasting and Replenishment</strong>: collaboratively developing joint forecasts and plans with supply-chain partners.<ol><li>Create joint objectives.</li><li>Develop a business plan.</li><li>Create a joint forecast.</li><li>Agree replenishment strategies.</li><li>Agree a technology partner to implement CPFR.</li></ol>" },
+            { topic: "Forecasting", q: "What is S&OP?", a: "<strong>Sales and Operations Planning</strong>: a collaborative process generating forecasts that all functional areas agree upon.<ol><li>Generate a quantitative sales forecast.</li><li>Marketing adjusts forecast.</li><li>Operations checks forecast against capability.</li><li>Marketing, operations, finance jointly review.</li><li>Executives finalise forecast and capacity decisions.</li></ol>" },
+            { topic: "Forecasting", q: "How do CPFR and S&OP differ?", a: "<strong>CPFR</strong> is <em>external</em>: collaboration with supply-chain partners on joint forecasts and replenishment. <strong>S&OP</strong> is <em>internal</em>: cross-departmental meetings to balance supply and demand within a single firm. Both seek alignment, but CPFR aligns the network; S&OP aligns the organisation." },
+
+            /* ============================================================
+               TOPIC: PRODUCTION ENGINEERING
+               ============================================================ */
+            { topic: "Production", q: "What is a manufacturing system?", a: "A system where materials are processed into a product of value. The <strong>'how' of making a design</strong>. Outputs are product, profit, and reputation." },
+            { topic: "Production", q: "What are the elements of a manufacturing strategy?", a: "<ul><li><strong>Capacity</strong>: how to meet demand.</li><li><strong>Process</strong>: made-to-order vs. make-to-stock.</li><li><strong>Facility</strong>: plant layout.</li><li><strong>Make or buy</strong>: in-house vs. subcontract.</li><li><strong>Infrastructure</strong>: production planning, control, quality.</li><li><strong>HR</strong>: organisational structure.</li><li><strong>People & processes</strong>: culture often more important than structure.</li></ul>" },
+            { topic: "Production", q: "Distinguish between continuous, batch, and discrete production.", a: "<ul><li><strong>Continuous</strong>: materials flow continuously through equipment (steel, gasoline). Steady-state, 24-hr operation.</li><li><strong>Batch</strong>: finite quantities processed by a step or sequence of equipment (paint, beverages). Start–stop.</li><li><strong>Discrete</strong>: finite quantities of distinct units assembled from parts (phones, cars). Variable; units remain identifiable; stopping the line doesn't damage product.</li></ul>" },
+            { topic: "Production", q: "Compare continuous, batch, and discrete production (advantages/disadvantages).", a: "<strong>Continuous</strong>: high volume, low cost/unit, good efficiency; expensive, inflexible, costly long shutdowns. <strong>Batch</strong>: easy to scale, flexible product range, limits scrap; non-steady-state, hard to model, downtime, needs skilled workforce. <strong>Discrete</strong>: distinct units, line-stop safe, scalable from job-shop to flow assembly; needs assembly logic and component traceability." },
+            { topic: "Production", q: "Why is continuous-production uptime higher than batch utilisation?", a: "Continuous lines run steady-state, so transitions, changeovers, and quality losses are minimised. Batch processes are start-stop, suffer changeover and transition losses, and need quality checks per batch. Continuous lines are designed for one product at design rate; batch must handle variability and frequent stops." },
+            { topic: "Production", q: "What is cellular manufacturing (group technology)?", a: "Work cells producing a group of parts in medium quantities, based on <strong>group technology</strong>. Parts grouped by similar shape/size, route sheets, or classification/coding. Manufacturing in specialised cells (e.g. drilling or turning) — a 'mini-factory within a factory' — improves operating efficiencies and minimises batch-production disadvantages." },
+            { topic: "Production", q: "List the production efficiency measures from broadest to narrowest.", a: "<ol><li><strong>Asset Utilisation Rate</strong>: ideal rate at which a factory operates (max 8760 hr/yr).</li><li><strong>Overall Equipment Effectiveness (OEE)</strong>: includes losses from no market demand.</li><li><strong>Quality Utilisation</strong>: includes changeover/transition losses.</li><li><strong>Potential Rate Utilisation</strong>: includes quality losses.</li><li><strong>Availability</strong>: includes process-rate losses; the time the factory could run at any rate without losses.</li></ol>" },
+            { topic: "Production", q: "What is OEE and how is it calculated?", a: "<strong>Overall Equipment Effectiveness</strong>: a quantified measure of daily manufacturing operating effectiveness, used for batch and cellular production.<br><em>OEE = Availability × Rate (Yield/Efficiency) × Quality</em>.<br>Average for batch ≈ 60%; best-in-class ≈ 85%. OEE informs decisions on additional production capability, contracting, shifts, and mothballing." },
+            { topic: "Production", q: "What is uptime and how does it differ from availability?", a: "<strong>Uptime</strong>: efficiency measure for continuous and flow-assembly production. Average uptime for continuous ≈ 75–80%; best-in-class ≈ 95%. <strong>Uptime ≠ availability</strong>: uptime doesn't always include market demand; availability is only the time the equipment <em>could</em> run. 100% availability is cost-prohibitive." },
+            { topic: "Production", q: "What are the four key areas to move from prototype to successful manufacture?", a: "<ul><li><strong>Design for manufacture</strong>: feasibility, optimisation.</li><li><strong>Production engineering</strong>: developing the facility, controlled repeatable manufacture, maintenance and reliability.</li><li><strong>Quality management</strong>: TQM, Lean, Six Sigma.</li><li><strong>Supply chain management</strong>: systems, structures, strategy.</li></ul>" },
+            { topic: "Production", q: "What are the manufacturing phases?", a: "<ol><li><strong>Feasibility study</strong>: requirements, process, supply chain, risk.</li><li><strong>Production planning</strong>: project team, design assembly line, tooling, costs, supply-chain capacity, reliability/maintenance.</li><li><strong>Pre-production</strong>: initiation of facilities, prototypes, quality control initiation, supply-chain orders.</li><li><strong>Low-volume production</strong>: commissioning, logistics, operating procedures, traceability.</li><li><strong>High-volume production</strong>: increased supply-chain volume, sustainable operation.</li></ol>" },
+            { topic: "Production", q: "What is Root Cause Failure Analysis?", a: "A proactive maintenance, operation and design tool to determine the underlying cause(s) of failure.<ul><li>Problem statement: describe what happened.</li><li>Gather evidence for potential causes — events often have many causes; sequences branch.</li><li>Use <strong>Ishikawa / fishbone / cause-effect diagrams</strong>.</li><li>Document acceptance/rejection of root causes.</li><li>Use the <strong>5 Whys</strong>.</li><li>Eliminating the root cause prevents the failure.</li></ul>" },
+            { topic: "Production", q: "What is FMEA and what does it stand for?", a: "<strong>Failure Modes and Effects Analysis</strong>. Advancement of root-cause analysis for complex systems. First used by defence (1950s), NASA (1960s), Ford (1970s). Reviews components, assemblies, sub-systems and processes to identify failure modes, causes, and effects.<ul><li><strong>Design FMEA</strong>: potential impact of production failure at design stage.</li><li><strong>Process FMEA</strong>: failure, quality, reliability, or safety issues in service.</li></ul>" },
+            { topic: "Production", q: "How is the FMEA Risk Priority Number calculated?", a: "<em>RPN = Severity × Occurrence × Detection</em><br>Each scored 1–10:<ul><li><strong>Severity</strong>: 1 = No effect, 10 = Hazardous.</li><li><strong>Occurrence</strong>: 1 = Very unlikely (~1:1,000,000), 10 = Certain (~1:2).</li><li><strong>Detection</strong>: 1 = Detection certain, 10 = Very unlikely to detect.</li></ul>Higher RPN = higher priority for action." },
+            { topic: "Production", q: "Compare reactive and planned maintenance.", a: "<strong>Reactive</strong>: run-to-failure, breakdown, emergency. Not anticipated. Reactive organisations lose output: every 10% reactive maintenance ≈ 2% less uptime. ~Double the cost of planned maintenance.<br><strong>Planned</strong>: scheduled, predictive (condition monitoring), preventive — reduces unplanned downtime, lower cost, better safety." },
+            { topic: "Production", q: "What activities make up the pre-production phase?", a: "<ul><li>Prototype validation.</li><li>Implementation of process quality control.</li><li>Confirmation of supply chain.</li><li>Placing low-volume orders.</li></ul>Initiation of facilities → initiate quality control → confirm supply chain → low-volume orders." },
+            { topic: "Production", q: "What is the bathtub curve relevance to commissioning?", a: "30–70% of equipment failures occur within <strong>60–90 days of start-up</strong> (the 'infant mortality' part of the Weibull bathtub curve). Standards are required beyond 'it works' — vibration thresholds, lubricant quality, quality power, motor parameters, IR scans for hot spots, leak checks, process control." },
+            { topic: "Production", q: "What is Industry 4.0?", a: "The current digital revolution: merging of <strong>Cyber-Physical Systems (CPS)</strong> and the <strong>Internet of Things (IoT)</strong> into production. Enables 'Smart Manufacturing'.<br>Key contributors: cloud computing, big-data analytics, IoT, smart sensors, virtualisation, machine learning/AI.<br>Benefits: customised mass production, supply-chain optimisation, reduced cost (production, logistics, quality), tracking & monitoring, decentralised MES/REP, predictive maintenance, sustainability." },
+            { topic: "Production", q: "What are the four design principles of Industry 4.0?", a: "<ul><li><strong>Interconnection</strong>: machines, CPS, sensors, devices, and people interact and exchange information.</li><li><strong>Information transparency</strong>: large amounts of data made transparent and useful.</li><li><strong>Technical assistance</strong>: interpretation and visualisation to assist decisions.</li><li><strong>Decentralised decisions</strong>: CPS make autonomous decisions within boundary conditions or escalate.</li></ul>" },
+            { topic: "Production", q: "What are the key building blocks of Industry 4.0?", a: "<ul><li><strong>Smart/intelligent sensors</strong>: sensor + microprocessor (sense → process → communicate).</li><li><strong>Control</strong>: data acquisition, actuation, process control, condition monitoring, identifying critical events.</li><li><strong>Connectivity</strong>: data communicated to centralised server.</li><li><strong>Smart factory</strong>: decision-making, semi/autonomous production, performance self-optimisation.</li></ul>" },
+            { topic: "Production", q: "What are the challenges of transitioning to Industry 4.0?", a: "<ul><li>Existing I4.0 maturity (strategy, leadership, customers, products, operations, culture, people, technology).</li><li>Feasibility: product market, technology (sensors, hardware, software), finance (CapEx, revenue, profit).</li><li>Business strategy fit: improved reliability, uptime, energy efficiency, global connectivity, ROI.</li><li>Managing organisational change: re-training the workforce, cyber-security.</li></ul>" },
+            { topic: "Production", q: "What is a Digital Twin?", a: "A <strong>virtual representation</strong> of a physical object, system, or process. Three elements: (1) physical product in real space, (2) virtual product in virtual space, (3) connections of data and information that link the two. Concept introduced in 2003 by Dr Michael Grieves. Enabled by Industry 4.0 (CPS + IoT)." },
+            { topic: "Production", q: "What is the NASA definition of a perfect Digital Twin?", a: "A <strong>multi-physics, multi-scale, probabilistic, ultra-fidelity simulation</strong> that reflects, in a timely manner, the state of a corresponding twin based on historical data, real-time sensor data, and physical models." },
+            { topic: "Production", q: "What does a Digital Twin facilitate?", a: "<ul><li>Decision making (human or autonomous).</li><li>Cost/risk reduction.</li><li>Real-time condition monitoring.</li><li>Predictive maintenance.</li><li>Feasibility assessment.</li><li>Low-risk testing of manufacturing scenarios.</li><li>Process evaluation and control.</li><li>Production planning and resourcing.</li><li>Optimisation and AI integration.</li></ul>" },
+            { topic: "Production", q: "What are the advantages and disadvantages of Digital Twins in manufacturing?", a: "<strong>Advantages</strong>: predictive maintenance, real-time monitoring, low-risk scenario testing, optimisation, decision support, reduced cost & risk, integration across all manufacturing phases.<br><strong>Disadvantages</strong>: requires high-fidelity model (model/algorithm/hardware errors), expensive sensor and computing infrastructure, big-data fusion challenges, verification/validation/accreditation effort, cyber-security risk, data quality dependency." },
+            { topic: "Production", q: "What governs a Digital Twin's fidelity?", a: "System complexity and process uncertainty make accurate virtual entities challenging. Requires <strong>verification, validation, and accreditation</strong> against model, algorithm, and hardware errors. Use-case-specific and dynamic. Big-data analysis, data fusion (sensor + virtual + historical), Bayesian confidence testing, statistical process control. There is an optimum fidelity beyond which extra cost outweighs benefit." },
+
+            /* ============================================================
+               TOPIC: FACILITIES LAYOUT
+               ============================================================ */
+            { topic: "Facilities", q: "What does BS EN ISO 9000:2015 cover?", a: "Quality management systems — fundamentals and vocabulary. Provides the <strong>terms, definitions and concepts</strong> used in the ISO 9000 series, including ISO 9001 and ISO 9004. Background for understanding and implementation of QMS." },
+            { topic: "Facilities", q: "What does BS EN ISO 9001:2015 specify?", a: "Specifies <strong>requirements for a QMS</strong> aimed at:<ul><li>Giving confidence in products and services.</li><li>Enhancing customer satisfaction.</li><li>Organisational benefits — improved internal communication, better understanding and control of processes.</li></ul>Allows a firm to consistently meet customer/regulatory requirements, enhance satisfaction, address risks and opportunities, demonstrate conformity." },
+            { topic: "Facilities", q: "What does BS EN ISO 9004:2018 cover and how does it differ from 9001?", a: "<strong>Managing for the sustained success of an organisation</strong>. Provides guidance for organisations going beyond the requirements of ISO 9001:2015, including a self-assessment methodology to evaluate QMS maturity.<br><strong>9001 vs. 9004</strong>: 9001 focuses on confidence in <em>products and services</em>; 9004 focuses on confidence in the organisation's <em>ability to achieve sustained success</em>." },
+            { topic: "Facilities", q: "What does BS EN ISO 14001:2015 cover?", a: "<strong>Environmental Management Systems</strong>. Integrated with organisational management to:<ul><li>Protect the environment and respond to environmental changes.</li><li>Prevent or mitigate adverse environmental impacts.</li><li>Mitigate the effect of adverse conditions on the organisation.</li><li>Comply with obligations, regulations, legislation.</li><li>Enhance environmental performance.</li><li>Influence how products are designed, manufactured, used, disposed of (life cycle).</li><li>Communicate environmental metrics to interested parties.</li></ul>" },
+            { topic: "Facilities", q: "What is the PDCA cycle?", a: "<strong>Plan-Do-Check-Act</strong> — a cycle of continual improvement (key in ISO 9001:2015):<ul><li><strong>Plan</strong>: establish system objectives, processes, resources to deliver results meeting customer requirements; identify risks and opportunities.</li><li><strong>Do</strong>: implement what was planned.</li><li><strong>Check</strong>: monitor and measure processes/products against policies, objectives, requirements; report results.</li><li><strong>Act</strong>: take actions to improve performance.</li></ul>" },
+            { topic: "Facilities", q: "What are the key clauses of ISO 9001:2015 mapped to PDCA?", a: "<ul><li>Clause 4 – Context of organisation (Plan).</li><li>Clause 5 – Leadership (Plan).</li><li>Clause 6 – Planning (Plan).</li><li>Clause 7 – Support (Do).</li><li>Clause 8 – Operation (Do).</li><li>Clause 9 – Performance evaluation (Check).</li><li>Clause 10 – Improvement (Act).</li></ul>" },
+            { topic: "Facilities", q: "What is the 'process approach' in ISO 9001?", a: "Application of the process approach in a QMS enables:<ul><li>Understanding and consistency in meeting requirements.</li><li>Consideration of processes in terms of <strong>added value</strong>.</li><li>Achievement of effective process performance.</li><li>Improvement of processes based on evaluation of data and information.</li></ul>" },
+            { topic: "Facilities", q: "What are the Quality Management principles (ISO 9000)?", a: "<ul><li>Improvement (quality, efficiency, new business, customer satisfaction).</li><li>Customer focus.</li><li>Leadership.</li><li>Engagement of people.</li><li>Process approach.</li><li>Evidence-based decision-making (data driven).</li><li>Relationship management.</li></ul>" },
+            { topic: "Facilities", q: "What considerations apply to facility location?", a: "<ul><li><strong>Geography</strong>: landscape, prevailing weather, soil type, link to processes, supply chains, material/product flows.</li><li><strong>Local land use</strong>: avoid conflicts/hazards with neighbours; buffer zones for expansion.</li><li><strong>Environment</strong> (ISO 14001 considerations).</li><li><strong>Sustainability</strong>: balance of environment, society, economy (Triple Bottom Line).</li><li><strong>Safety/human factors</strong>: defined spacing (regulations) and qualitative relationship matrices.</li><li><strong>Zoning</strong>: ignition sources, blast radii, toxic gas, magnetic fields, etc.</li><li><strong>Accessibility</strong>: people, utilities, geography/transportation, products and waste out.</li></ul>" },
+            { topic: "Facilities", q: "What considerations apply to layout within a facility?", a: "<ul><li>Identify processes → equipment/stations/departments required.</li><li>Identify space requirements and distances between them.</li><li>Use a <strong>relationship matrix</strong> (qualitative C/N/S or quantitative distances) to capture proximity needs.</li><li>Build a <strong>relationship diagram</strong> placing departments/stations relative to each other.</li><li>Choose layout type: process-focused, product-focused, fixed-position, or hybrid.</li><li>Plan material handling and routing (fixed/variable, manual/powered, continuous/synchronous/asynchronous).</li><li>Activity flow: Operations, Transportation, Inspection, Delay, Storage.</li></ul>" },
+            { topic: "Facilities", q: "What types of layout exist?", a: "<ul><li><strong>Process-focused</strong>: similar processes grouped together (job shop). Flexible but high WIP and travel distance.</li><li><strong>Product-focused</strong>: arranged along the product flow (assembly line). Efficient for high-volume.</li><li><strong>Fixed-position</strong>: product stays in place (ships, aircraft); workers/equipment come to it.</li><li><strong>Hybrid</strong>: combination of the above (e.g. cellular manufacturing).</li></ul>" },
+            { topic: "Facilities", q: "What three distance metrics are used between layout points?", a: "For two stations at (x₁,y₁) and (x₂,y₂):<ul><li><strong>Euclidean (straight-line)</strong>: <em>d_E = √((xᵢ−xⱼ)² + (yᵢ−yⱼ)²)</em>.</li><li><strong>Rectilinear (Manhattan)</strong>: <em>d_R = |xᵢ−xⱼ| + |yᵢ−yⱼ|</em> — for grid travel through aisles.</li><li><strong>Chebyshev</strong>: <em>d_C = max(|xᵢ−xⱼ|, |yᵢ−yⱼ|)</em> — simultaneous x and y movement (e.g. crane/AGV).</li></ul>" },
+            { topic: "Facilities", q: "What are the five activities in a process flow chart?", a: "<ul><li><strong>Operation</strong>: a value-adding task at a specified location (e.g. machining).</li><li><strong>Transportation</strong>: movement of material/component/product (e.g. conveyor).</li><li><strong>Inspection</strong>: quality assurance / acceptability check.</li><li><strong>Delay</strong>: pause, wait, or interruption in WIP.</li><li><strong>Storage</strong>: holding for later use (raw materials or finished product).</li></ul>" },
+            { topic: "Facilities", q: "What is a Bill of Materials (BOM)?", a: "A hierarchical list of items required to produce a product, organised by level: Level 0 = product; Level 1 = sub-assemblies; Level 2 = components; Level 3 = raw materials. Each entry shows the item, quantity required, and description. Underpins MRP planning." },
+            { topic: "Facilities", q: "What material handling options are available within a facility?", a: "<ul><li>Industrial trucks.</li><li>Automated guided vehicles (AGVs).</li><li>Rail-guided vehicles.</li><li>Conveyors (continuous, synchronous, asynchronous).</li><li>Hoists and cranes.</li></ul>" },
+            { topic: "Facilities", q: "What is fixed vs. variable material routing?", a: "<ul><li><strong>Fixed routing</strong>: all work units undergo identical processing and station sequencing.</li><li><strong>Variable routing</strong>: different work units take different processing or sequence — used in flexible manufacturing systems.</li></ul>" },
+            { topic: "Facilities", q: "What are the types of automated production lines?", a: "<ul><li><strong>Linear / in-line</strong>: stations arranged in a straight sequence.</li><li><strong>Carousel</strong>: stations on a rotating loop.</li><li><strong>Dial-indexing</strong>: stations on a rotating turntable, indexing between positions.</li></ul>By product: single, mixed, or batch." },
+            { topic: "Facilities", q: "How is line efficiency E defined for an automated line?", a: "For an automated line with ideal cycle time <em>T_c = T_r + T_si</em> (transfer + service), breakdown frequency F, and average downtime per breakdown T_d:<br><em>Actual production time T_p = T_c + F·T_d</em><br><em>Line efficiency E = T_c / (T_c + F·T_d)</em><br><em>Actual rate R_p = 60/T_p</em>; <em>ideal rate R_c = 60/T_c</em>." },
+            { topic: "Facilities", q: "How is breakdown frequency F calculated for a multi-station line?", a: "<em>F = ΣP_i</em> over all stations, where P_i is the probability/frequency of failure at station i. If all P_i are equal: <em>F = nP</em>." },
+
+            /* ============================================================
+               TOPIC: MATERIAL TRACKING / MRP
+               ============================================================ */
+            { topic: "MRP", q: "What is MRP and what does it cover?", a: "<strong>Materials Requirement Planning</strong> — inventory control in manufacturing covering production scheduling and material purchasing. Assigns priority for components/sub-assemblies based on delivery times and identifies manufacturing capacity at a detailed level." },
+            { topic: "MRP", q: "What are the inputs to an MRP program?", a: "<ul><li><strong>Master Schedule</strong>: which products to make, how many, and when ready.</li><li><strong>Bill of Materials (BOM)</strong>: product, sub-assemblies, components.</li><li><strong>Inventory record</strong>: computerised stock levels.</li></ul>" },
+            { topic: "MRP", q: "What are the steps inside an MRP program?", a: "<ol><li>Estimate demand and materials required to fulfil it.</li><li>Check demand against inventory and allocate resources.</li><li>Production scheduling — time and labour required.</li><li>Process monitoring and deadline setting.</li></ol>" },
+            { topic: "MRP", q: "What are the primary outputs of an MRP program?", a: "<ol><li><strong>Order release notice</strong>: placing planned orders.</li><li><strong>Change in master schedule</strong>: rescheduling/cancellation.</li><li><strong>Inventory status / update report</strong>.</li></ol>" },
+            { topic: "MRP", q: "What are the secondary outputs of an MRP program?", a: "<ul><li><strong>Performance reports</strong>: costs, resource usage, lead times.</li><li><strong>Expectation reports</strong>: deviations from schedule, overdue tasks, scrap.</li><li><strong>Planning reports</strong>: projected inventory.</li></ul>" },
+            { topic: "MRP", q: "Define the MRP acronyms: SR, IS, LT, SS, LS.", a: "<ul><li><strong>SR — Scheduled Receipt</strong>: an order already placed that is due to arrive.</li><li><strong>IS — Initial Stock</strong>: the on-hand inventory at the start.</li><li><strong>LT — Lead Time</strong>: number of periods between placing and receiving an order.</li><li><strong>SS — Safety Stock</strong>: buffer kept to protect against uncertainty.</li><li><strong>LS — Lot Size</strong>: rule for the order quantity, e.g. <em>LfL</em> (Lot for Lot — order exactly the net requirement) or fixed LS = X (or minimum LS = X+).</li></ul>" },
+            { topic: "MRP", q: "Define MRP's row terms: GR, PSB, IIS, NR, PR, POR.", a: "<ul><li><strong>GR — Gross Requirements</strong>: total demand per period (from master schedule).</li><li><strong>PSB — Projected Stock Balance</strong>: forecast end-of-period inventory; <em>PSB = IIS + SR (or PR) − GR</em>.</li><li><strong>IIS — Inventory in Stock</strong>: starting inventory carried into a period.</li><li><strong>NR — Net Requirement</strong>: shortfall when IIS &lt; GR; <em>NR = GR − IIS − SR + SS</em> (when applicable).</li><li><strong>PR — Planned Receipts</strong>: planned arrivals to cover NR (governed by LS).</li><li><strong>POR — Planned Order Release</strong>: when to place the order, offset by lead time (= PR shifted earlier by LT periods).</li></ul>" },
+            { topic: "MRP", q: "What's the difference between MRP, MRP II, and ERP?", a: "<ul><li><strong>MRP</strong> — Materials Requirement Planning (materials and inventory).</li><li><strong>MRP II</strong> — Manufacturing Resource Planning (extends to labour, budget, other resources).</li><li><strong>ERP</strong> — Enterprise Resource Planning (extends across the whole company: sales, procurement, planning, inventory, marketing, resources, accounting, supply chain).</li></ul>" },
+            { topic: "MRP", q: "What are the advantages of MRP/MRP II/ERP?", a: "<ul><li>Knowledge of material/component availability when needed.</li><li>Optimised inventory levels and associated costs.</li><li>Optimised customer lead times.</li><li>Efficient manufacturing through production planning and resource scheduling.</li><li>Efficient utilisation of the manufacturing facility.</li></ul>" },
+            { topic: "MRP", q: "What are the disadvantages of MRP/MRP II/ERP?", a: "<ul><li>Complex and expensive to implement.</li><li>Lack of flexibility; errors propagate from inaccurate stock data.</li><li>Temptation to hold more stock than needed (with associated costs).</li></ul>" },
+            { topic: "MRP", q: "Why is data tracking in manufacturing important (battery-cell example)?", a: "Tracking links to MRP reporting, application usage, environmental reporting and end-of-life. Enables <strong>quality monitoring</strong> and continual improvement. Battery cell value chain spans: raw-material extraction → cell components → cell manufacturing → pack manufacturing → battery use → end-of-life. Each step needs trace objects and data flows for traceability." },
+            { topic: "MRP", q: "What types of data are collected during use of a battery? (Master/Transaction/Status)", a: "<ul><li><strong>Master data</strong>: cell chemistry, cell design, modules per pack, BMS data.</li><li><strong>Transaction data</strong>: number of cycles (Ah throughput), extended producer responsibility records, calendar service life, end-of-life strategy.</li><li><strong>Status data</strong>: State of Health (SoH), internal resistance, State of Charge (SoC), Depth of Discharge (DoD), operating temperature, age.</li></ul>Key for end-of-life tracking and life-cycle analysis." },
+            { topic: "MRP", q: "What is the implication of using a fixed lot size instead of LfL in MRP?", a: "Fixed lot size (e.g. LS = 3500) means orders are placed in standard batches even if smaller would meet demand. <strong>Implications</strong>: more stock carried (carrying cost ↑), smoother capacity loading, fewer setups (lower ordering cost), but reduced flexibility and inflated PSB/IIS. The line capacity must be re-checked because batches may exceed period capacity, forcing earlier release or extra shifts." },
+
+            /* ============================================================
+               TOPIC: QUALITY AND EFFICIENCY
+               ============================================================ */
+            { topic: "Quality", q: "What is Just-in-Time (JIT)?", a: "A management strategy targeting increased efficiency through the <strong>minimisation of inventory</strong>. Originated in the Toyota Production System (TPS). Uses <strong>Kanban</strong> scheduling to avoid overcapacity of WIP. Reliant on steady production, high-quality workmanship, no machine breakdowns, reliable suppliers." },
+            { topic: "Quality", q: "What is Lean and what are its 5 principles?", a: "Continual improvement: minimise waste, improve quality, reduce costs, reduce time. Aim is to <strong>create value</strong> by eliminating waste from the value stream.<br><strong>5 Principles</strong>:<ol><li>Product value.</li><li>Mapping the value stream (incl. cradle-to-grave LCA).</li><li>Creating flow to improve lead times.</li><li>Pull system.</li><li>Perfection (continual improvement).</li></ol>" },
+            { topic: "Quality", q: "List the 8 wastes in Lean.", a: "<ol><li>Unnecessary <strong>transportation</strong>.</li><li>Excess <strong>inventory</strong>.</li><li>Unnecessary <strong>movement</strong> of people, equipment, machinery.</li><li><strong>Waiting</strong> — idle people or equipment.</li><li><strong>Over-production</strong>.</li><li><strong>Over-processing</strong> / unnecessary features.</li><li><strong>Defects</strong> requiring costly correction.</li><li><strong>Unused talent</strong> and ingenuity.</li></ol>" },
+            { topic: "Quality", q: "How are lead time, process cycle efficiency, and throughput yield calculated?", a: "<ul><li><strong>Lead time</strong> = value-added time + non-value-added time.</li><li><strong>Process cycle efficiency</strong> = value-added time / lead time.</li><li><strong>Throughput yield</strong> = probability of a defect-free product = product of process step yields.</li></ul>" },
+            { topic: "Quality", q: "What are the advantages and disadvantages of Lean?", a: "<strong>Advantages</strong>: saves time and money, environmentally friendly, improved customer satisfaction.<br><strong>Disadvantages</strong>: focus on process not staff (can affect employee wellbeing), can stifle innovation, more of a culture than a defined quantitative method." },
+            { topic: "Quality", q: "What is Six Sigma?", a: "A statistical approach for <strong>reducing errors</strong>, targeting <strong>&lt;3.4 defects per million opportunities</strong>. Uses standard deviation: <ul><li>1σ → 690,000 defects/million</li><li>3σ → 66,800</li><li>4σ → 6,210</li><li>5σ → 230</li><li>6σ → 3.4</li></ul>" },
+            { topic: "Quality", q: "How are defects per million opportunities (DPMO) calculated?", a: "<em>DPMO = (Defects / Opportunities) × 1,000,000</em>.<br>Example: 10 defects in 19,000 cells with 17 failure opportunities each → opportunities = 19,000 × 17 = 323,000; DPMO = (10/323,000) × 10⁶ ≈ 31 (≈ 5.5σ). Six Sigma target &lt;3.4 DPMO." },
+            { topic: "Quality", q: "What is Lean Six Sigma?", a: "Combines Lean (eliminating waste of resources, time, effort, talent) with Six Sigma (reducing process/product defects). Provides a clear path to improvement objectives. Built on Lean (Toyota, 1940s) plus Six Sigma (Motorola, 1980s). Includes <strong>Kanban</strong> (workflow visualisation, WIP limits) and <strong>Kaizen</strong> (employee-driven continuous improvement)." },
+            { topic: "Quality", q: "What is the Six Sigma DMAIC methodology?", a: "<strong>Define, Measure, Analyse, Improve, Control</strong> — the structured Six Sigma improvement project methodology developed in the 1980s for removing manufacturing defects." },
+            { topic: "Quality", q: "What is a Quality Management System (QMS)?", a: "A framework for meeting business challenges. Defined in ISO 9000, with ISO 9001 and ISO 9004 supporting development. Underpinning principles include improvement, customer focus, leadership, engagement of people, process approach, evidence-based decision-making, and relationship management." },
+            { topic: "Quality", q: "How would you apply ISO 9001 + Lean + PDCA to improve a battery manufacturing process?", a: "Within the ISO 9001:2015/9004:2018 frameworks: define QMS scope, leadership/policies, plan KPIs and risks (Plan); implement controls and Lean techniques, value-stream map, Kanban for WIP, Kaizen events (Do); collect data via process traceability, OEE, throughput yield, DPMO, internal audit (Check); apply root-cause analysis and FMEA to highest-defect processes, update SOPs and re-train, drive towards Six Sigma targets and circular-economy outputs (Act). Iterate continually with data-driven decisions." },
+            { topic: "Quality", q: "What steps are involved in conducting a Root Cause Failure Analysis on a manufacturing defect?", a: "<ol><li><strong>Problem statement</strong> — describe the defect precisely.</li><li><strong>Gather evidence</strong> — process data, dimensional measurements, inspection records.</li><li><strong>Identify potential causes</strong> using Ishikawa/fishbone (Materials, Methods, Machines, Manpower, Measurement, Environment).</li><li>Apply the <strong>5 Whys</strong> to drill down.</li><li><strong>Validate</strong> each candidate cause; document acceptances/rejections.</li><li><strong>Implement</strong> corrective action eliminating the root cause.</li><li><strong>Verify and monitor</strong> via control charts/SPC and update FMEA.</li></ol>" },
+
+            /* ============================================================
+               TOPIC: LIFE CYCLE ASSESSMENT
+               ============================================================ */
+            { topic: "LCA", q: "What is a Life Cycle Assessment (LCA)?", a: "A method to <strong>measure, understand and address the environmental impacts</strong> of a product across its life cycle. Standardised in ISO 14040/14044. Helps identify environmental improvements, inform decision making, select indicators, validate marketing claims/EPDs, and combine with cost & performance data in selection." },
+            { topic: "LCA", q: "What is the full life cycle of a product (cradle-to-grave)?", a: "<ul><li><strong>Raw material acquisition</strong>.</li><li><strong>Material production</strong>.</li><li><strong>Product use</strong>.</li><li><strong>End-of-life treatment</strong>.</li><li><strong>Recycling</strong>.</li><li><strong>Final disposal</strong>.</li></ul>By covering the whole cycle, environmental burdens between stages can be identified and possibly avoided." },
+            { topic: "LCA", q: "What are the four phases of an LCA?", a: "<ol><li><strong>Goal & Scope Definition</strong> — subject and level of detail.</li><li><strong>Inventory Analysis (LCI)</strong> — input/output data.</li><li><strong>Impact Assessment (LCIA)</strong> — environmental significance.</li><li><strong>Interpretation</strong> — conclusions, recommendations, decision-making.</li></ol>The phases interact iteratively." },
+            { topic: "LCA", q: "What does the goal of an LCA study define?", a: "<ul><li>The <strong>intended application</strong>.</li><li>The reasons / drivers for the study (objectives).</li><li>The <strong>intended audience</strong>.</li><li>Limitations due to methods or assumptions.</li><li>Whether it's a comparative study and whether it will be made public.</li><li>The commissioner of the study and other influential actors.</li></ul>Clarifies the question at the heart of the study." },
+            { topic: "LCA", q: "What does the scope of an LCA define?", a: "<ul><li>Which product system and its function.</li><li>The <strong>system boundary</strong>.</li><li>The <strong>functional unit</strong> and reference flow.</li><li>Impacts, categories, assessment methodology and interpretation.</li><li>Data required and its quality.</li><li>Assumptions and limitations.</li><li>Type and format of the report.</li></ul>Must be sufficient to address the stated goal." },
+            { topic: "LCA", q: "What is a product system in LCA?", a: "A model of the life cycle of a product according to its function. Sub-divided into <strong>unit processes</strong> linked by flows:<ul><li><strong>Intermediate flows</strong>: within the system (materials, sub-assemblies).</li><li><strong>Elementary flows</strong>: entering/leaving the system (e.g. crude oil in; emissions out).</li></ul>The system boundary is set by the level of detail required (the goal)." },
+            { topic: "LCA", q: "What is an elementary flow?", a: "Material or energy entering the system being studied that has been drawn from the environment <strong>without previous human transformation</strong>, or material/energy leaving the system that is released into the environment <strong>without subsequent human transformation</strong> (per ISO 14040). Examples: crude oil, solar radiation, emissions to air, discharges to water/soil." },
+            { topic: "LCA", q: "What is a Functional Unit and why does it matter?", a: "A <strong>quantified description of what the product system provides</strong> — the quantified performance used as a reference unit (ISO 14040). All inputs and outputs are related to it. <strong>Defined in the Goal & Scope phase.</strong> It is necessary to enable comparison of results in a comparative LCA. Example: 'illumination of a 20 m² room for 30 min at 800 lumens'." },
+            { topic: "LCA", q: "What is a Reference Flow in LCA?", a: "The quantified amount of manufactured product necessary for a product system to deliver the performance described by the functional unit (Curran). Per ISO 14040: a measure of the outputs from processes in a product system required to fulfil the function expressed by the functional unit. Example: number of bulbs needed (after lifetime adjustment) to deliver the lighting functional unit." },
+            { topic: "LCA", q: "Give examples of functional units and reference flows.", a: "<strong>Drying of hands</strong>: FU = a number of pairs of hands dried; reference flow = average mass of paper towel or volume of hot air. <strong>Fluorescent vs. LED bulb</strong>: FU = lighting a 20 m² room for 30 min at 800 lumens; reference flow = number of bulbs needed (iterating over lifetimes)." },
+            { topic: "LCA", q: "What are common system boundaries in LCA?", a: "<ul><li><strong>Cradle-to-grave</strong>: full life cycle from raw materials to end-of-life.</li><li><strong>Cradle-to-gate</strong>: raw materials to factory gate (excluding use and EoL).</li><li><strong>Gate-to-gate</strong>: only the manufacturing/processing phase (a single value-adding step).</li><li><strong>Cradle-to-cradle</strong>: extends to recycling/return into a new product life.</li></ul>The boundary is set in the Scope to match the study goal." },
+            { topic: "LCA", q: "What is Life Cycle Inventory (LCI) Analysis?", a: "Data collection and calculation to quantify inputs and outputs of the product system. <strong>Resource intensive and iterative</strong>. Data are collected from unit flows: <em>inputs</em> (resources, materials, products) and <em>outputs</em> (emissions, waste, products). Outcome: a list of quantified <strong>elementary flows</strong> for the product system described by the functional unit." },
+            { topic: "LCA", q: "What is Life Cycle Impact Assessment (LCIA)?", a: "Assesses the significance of environmental impact using inventory results. Translates physical flows into environmental impacts via 5 steps:<ol><li><strong>Selection</strong>: choose the impact categories in the scope.</li><li><strong>Classification</strong>: assign inventory flows to impacts.</li><li><strong>Characterisation</strong>: quantify the impact of flows in each category (using characterisation factors).</li><li><strong>Normalisation</strong> (optional): relative to existing background impact.</li><li><strong>Weighting & Grouping</strong> (optional): compare across impact categories.</li></ol>" },
+            { topic: "LCA", q: "Which steps in LCIA are mandatory and which are optional?", a: "<strong>Mandatory</strong>: Selection of impact indicators and characterisation models; Classification (assignment of LCI results); Characterisation (calculation of category indicator results / LCIA profile).<br><strong>Optional</strong>: Normalisation; Grouping; Weighting." },
+            { topic: "LCA", q: "What is normalisation in LCIA?", a: "Different impact categories have different units, making magnitudes hard to compare. <strong>Normalisation converts results to a common reference</strong>:<ul><li>Internal: divide by a baseline maximum (dimensionless %).</li><li>External: divide by national/EU/global emissions, often per capita per year (person-year).</li></ul>Allows relative magnitudes to be compared and prepares data for any subsequent weighting." },
+            { topic: "LCA", q: "What is weighting in LCIA?", a: "Reflects the <strong>relative importance</strong> of impact categories. Applied <em>after</em> normalisation. Allows prioritisation/comparison across impact categories (financial, political, social). Impacts can be scored and aggregated. <strong>Subjective</strong> with no scientific basis. <strong>Not permitted for comparative assertions disclosed publicly under ISO 14044.</strong> Should always be presented next to un-weighted values." },
+            { topic: "LCA", q: "What is grouping in LCIA?", a: "Aggregating several impacts into category groups. Computed as <em>G = Σ(I_c × WF_c)</em>, where I_c is the impact score and WF_c is the weighting factor. Yields a single weighted score per group." },
+            { topic: "LCA", q: "What is the interpretation phase of LCA?", a: "Results are interpreted to answer the questions set in the goal definition. Considers both inventory and impact assessments and the goal/scope restrictions. Provides conclusions, limitations, recommendations. <strong>Sensitivity/uncertainty analysis</strong> may be applied. Iterative — insights may refine inventory/scope/goals. First iteration is usually a screening test to identify key boundaries." },
+            { topic: "LCA", q: "What are the principles of an LCA?", a: "<ul><li>Relative approach based on a <strong>functional unit</strong>.</li><li>Addresses <strong>potential</strong> environmental impacts (no absolute score).</li><li>Quantitative within uncertainty bounds; integrates over time; some impacts will be future.</li><li><strong>Iterative</strong> — phases use results from other phases.</li><li>Does not directly address economic or social aspects.</li><li>Does not consider rare events (e.g. nuclear meltdown).</li><li>Flexible — there is no single methodology.</li></ul>" },
+            { topic: "LCA", q: "What other environmental management techniques exist alongside LCA?", a: "<ul><li>Life Cycle Assessment.</li><li>Risk assessment.</li><li>Environmental performance evaluation (KPIs).</li><li>Environmental auditing (compliance).</li><li>Environmental impact assessment (effects).</li></ul>An LCA is often used as part of a broader decision process." },
+            { topic: "LCA", q: "What is a critical review in LCA and when is it required?", a: "A check on whether an LCA met requirements for methodology, data, reporting, and interpretation. Facilitates understanding and enhances credibility. Defined in the Scope phase (what is covered, level of detail, who is involved). <strong>ISO 14044 makes a critical review mandatory for public disclosed comparative assertions</strong>, requiring a panel of at least three experts. Can be after the study or concurrent." },
+            { topic: "LCA", q: "Give an LCA case study illustrating the value of broadening the system boundary.", a: "<strong>Mercury and fluorescent bulbs</strong>: Considering only disposal made fluorescent bulbs look bad (they contain mercury). Broadening the boundary to include the use phase showed they are 75% more energy efficient than incandescent — less coal burned (which itself releases mercury). Net result: a 4–10× reduction in mercury when using fluorescents. Demonstrates the importance of system-level thinking." },
+            { topic: "LCA", q: "List the typical impact category indicators used in an LCA.", a: "<ul><li>Global Warming Potential (kg CO₂ eq).</li><li>Ozone depletion potential.</li><li>Acidification potential (mol H⁺ eq).</li><li>Eutrophication potential.</li><li>Resource depletion (kg Sb eq).</li><li>Human toxicity potential.</li><li>Particulate matter.</li><li>Land use / land transformation.</li><li>Freshwater use.</li></ul>" },
+            { topic: "LCA", q: "What does the LCA goal need to capture if the study is comparative?", a: "It must declare the <strong>comparative assertion</strong>, the products being compared, and whether the comparison will be disclosed publicly. Public comparative assertions trigger ISO 14044's mandatory <strong>critical review</strong> by an external panel and prohibit using weighting in the published comparison." },
+            { topic: "LCA", q: "What is the benefit and disadvantage of using a single impact (e.g. GHG) to compare technologies?", a: "<strong>Benefit</strong>: simple, intuitive, easy to communicate; supports a single regulatory or commercial target (carbon).<br><strong>Disadvantages</strong>: ignores other significant impacts (acidification, resource depletion, toxicity, land use); risks of <em>burden shifting</em> — fixing one problem creates another (e.g. EVs reduce tailpipe CO₂ but increase metal extraction)." },
+
+            /* ============================================================
+               TOPIC: SUSTAINABILITY / CIRCULAR ECONOMY
+               ============================================================ */
+            { topic: "Sustainability", q: "Define sustainable development.", a: "'Development that meets the needs of the present without compromising the ability of future generations to meet their own needs.' (Brundtland, 1987). Two key concepts: (1) the essential <strong>needs of the world's poor</strong>, given overriding priority; (2) <strong>limits</strong> imposed by the state of technology and social organisation on the environment's ability to meet present and future needs." },
+            { topic: "Sustainability", q: "What is the Triple Bottom Line?", a: "Sustainability balances <strong>three pillars</strong>:<ul><li><strong>Environment</strong> (Bearable when joined with Society).</li><li><strong>Society</strong> (Equitable when joined with Economy).</li><li><strong>Economy</strong> (Viable when joined with Environment).</li></ul>All three must be satisfied simultaneously, across populations (space) and across generations (time). Not a trade-off." },
+            { topic: "Sustainability", q: "What is Corporate Social Responsibility (CSR)?", a: "A concept whereby companies <strong>integrate social and environmental concerns</strong> in their business operations and stakeholder interactions, on a voluntary basis (EC, 2001). The continuing commitment by business to behave ethically and contribute to economic development while improving quality of life of the workforce, families, local community, and society at large (WBCSD, 1999). Underpinned by integration of social, environmental, ethical, human-rights and consumer concerns into business operations and core strategy." },
+            { topic: "Sustainability", q: "Why pursue sustainability? (financial, consumer, operational, organisational pay-offs)", a: "<ul><li><strong>Financial</strong>: lower costs, lower invested capital, increased returns and market appreciation.</li><li><strong>Consumer</strong>: higher customer satisfaction, market share, reputation, product innovation.</li><li><strong>Operational</strong>: process innovation, increased productivity, lower process times, less waste.</li><li><strong>Organisational</strong>: better employee satisfaction, stronger stakeholder relationships, lower regulatory risk, organisational learning.</li></ul>Plus legal/compliance reasons (laws, GRI, PRME) and ethical/values-based motivations." },
+            { topic: "Sustainability", q: "What megatrends influence sustainability and SCM?", a: "<ul><li><strong>Demographics</strong>: 9.3 bn people by 2050; ageing populations; rapid urbanisation; growing developing-world populations vs. shrinking developed-world populations.</li><li><strong>Emerging consumers</strong>: lower middle-class with new needs; localising and bundling base products; servitisation.</li><li><strong>Smart technologies & digital factories</strong>: cloud, big data, AR, IoT/CPS, additive manufacturing, RFID, drones, autonomous vehicles.</li><li><strong>Other</strong>: servitisation/PSS, sharing economy, circular economy.</li></ul>" },
+            { topic: "Sustainability", q: "What is the 80/20 rule for sustainability?", a: "<strong>80% of carbon-footprint savings can only be made at the design stage</strong> (product / supply chain). Decisions made early — how to design the product, what materials to use, which suppliers to choose, where to locate warehouses and DCs, transport modes, delivery organisation — lock in most of the lifetime impact." },
+            { topic: "Sustainability", q: "What does 'do more with less' deliver?", a: "<ul><li>Reduced long-term risk and liability.</li><li>Fewer conflicts with authorities and society.</li><li>Improved inventory control.</li><li>Reduced packaging and shipping costs.</li><li>Reduced waste-treatment.</li><li>Better supplier-buyer relations and commitment.</li><li>Increased productivity.</li><li>Improved company reputation/image.</li></ul>" },
+            { topic: "Sustainability", q: "What is an Eco-Industrial Park?", a: "An industrial park designed around <strong>circular-economy principles</strong>: companies co-located so the waste streams of one become input streams to another (industrial symbiosis). Reduces resource use, waste and emissions while creating economic value. Requires matching companies, careful infrastructure (utilities, logistics), shared services, and governance." },
+            { topic: "Sustainability", q: "What is needed to design and operate an Eco-Industrial Park?", a: "<ul><li>Identify input/output material/energy streams of candidate companies.</li><li>Match streams to find synergies (e.g. waste heat, by-products, water reuse).</li><li>Add 'connector' companies if needed to close loops.</li><li>Plan logistics and shared utilities (energy, water, waste).</li><li>Governance/contracts and risk-sharing.</li><li>Information sharing and continual improvement.</li><li>Regulatory compliance and incentives.</li><li>Environmental monitoring and reporting.</li></ul>" },
+            { topic: "Sustainability", q: "What is the Supply Chain Sustainability Framework / Green SCM?", a: "Sustainability practices promote harmony between the industrial system and nature. <strong>Top priority: reduce carbon footprint.</strong><br><strong>Green SCM</strong> covers green purchasing, manufacturing, distribution, and reverse logistics. Integrates the three Ps (<strong>Profit, People, Planet</strong>). Considers the entire life cycle (design → sourcing → mfg → delivery → operations → disposal). Sustainable means doing no harm to natural and social systems while still profitable. Reduce surplus supply (no over-production) and reduce reverse supply (reparable, recyclable, re-manufactured)." },
+            { topic: "Sustainability", q: "What are the four sustainability approaches (4 Rs)?", a: "<ul><li><strong>Re-use</strong></li><li><strong>Re-manufacturing</strong></li><li><strong>Re-conditioning</strong></li><li><strong>Recycling</strong></li></ul>" },
+            { topic: "Sustainability", q: "What is reverse logistics?", a: "The process where the <strong>physical flow moves from customer to vendor</strong>, opposite to the traditional flow. Specialised players manage the phases from downstream to upstream markets. Goal: <strong>recapture or create differential value</strong> from the reverse flow through reprocessing or disposal. Must be managed across the whole supply chain to optimise overall costs while considering external effects." },
+            { topic: "Sustainability", q: "What is the difference between reverse logistics and a closed-loop supply chain?", a: "<ul><li><strong>Reverse logistics</strong>: regulates the backward flow (transportation, storage, operations) to exercise recovery options — irrespective of how the product or forward logistics were originally designed.</li><li><strong>Closed-loop supply chain</strong>: deliberately pursues value-creation from the design stage; products, services and processes are designed to incorporate recovery from the start.</li></ul>" },
+            { topic: "Sustainability", q: "Why are reverse flows more complex than forward flows?", a: "<ul><li><strong>Uncertainty</strong> on quality, quantity, and timing of returns.</li><li><strong>Consumer behaviour</strong>: willingness to return rather than waste, willingness to buy recovered/remanufactured products, willingness to pay.</li><li><strong>Facilities</strong>: number, location, accessibility of collection points; cost-effectiveness limited by labour-intensive inspection and sorting.</li></ul>" },
+            { topic: "Sustainability", q: "What are the eight categories of reverse flows?", a: "<ol><li>Failed/unwanted/damaged/defective products that can be repaired or remanufactured and resold.</li><li>Old/obsolete or near end-of-shelf-life products with salvage/resale value.</li><li>Unsold retailer overstocks with resale value.</li><li>Products being recalled for safety/quality.</li><li>'Pull and replace' repair products.</li><li>Recyclable products (pallets, containers, ink cartridges).</li><li>Products/parts that can be remanufactured and resold.</li><li>Scrap metal recoverable as raw material.</li></ol>" },
+            { topic: "Sustainability", q: "Distinguish open-loop vs. closed-loop reverse networks.", a: "<ul><li><strong>Open-loop</strong>: forward flows go through normal logistics; reverse flows are managed by other players (collectors) who pass them to <strong>secondary markets</strong>. Recovered materials end up elsewhere — e.g. PET bottles → polyester sportswear, food waste → fodder/fertiliser.</li><li><strong>Closed-loop</strong>: origin and destination of the flows coincide; products and packaging return to their <strong>original producers</strong> — e.g. chemicals/electrical components, returnable pallets/containers.</li></ul>" },
+            { topic: "Sustainability", q: "What are the key recovery operations in reverse logistics?", a: "<ol><li><strong>Gatekeeping</strong> — decide which products enter the reverse process.</li><li><strong>Collection</strong> — gather and group products, transfer to recovery point.</li><li><strong>Inspection / Testing</strong> — assess condition; functional and diagnostic tests.</li><li><strong>Sortation / Selection</strong> — separate by goods type and recovery option.</li><li><strong>Disposition</strong> — send to specific destinations.</li><li><strong>Recovery</strong> — recapture residual value via best available option.</li></ol>" },
+            { topic: "Sustainability", q: "Compare centralised vs. decentralised reverse-logistics return systems.", a: "<ul><li><strong>Centralised Efficient (Cost-Effective)</strong>: inspection, sortation and disposition centralised in one facility. Suitable for products with <strong>low time-value depreciation</strong> (e.g. machine tools).</li><li><strong>Decentralised Responsive (Time-Effective)</strong>: testing/sortation/disposition managed by retailers and resellers ('preponement'). Suitable for products with <strong>high time-value depreciation</strong> (electronics, fashion).</li></ul>" },
+
+            /* ============================================================
+               TOPIC: PROCUREMENT / SUPPLIER SELECTION
+               ============================================================ */
+            { topic: "Procurement", q: "What are the key purchasing/procurement responsibilities in SCM?", a: "<ul><li>Build long-term relationships with suppliers.</li><li><strong>Supplier evaluation</strong>: determine supplier capabilities and performance.</li><li><strong>Supplier certification</strong>: third-party or internal certification to assure product quality and service compliance.</li><li><strong>Strategic partnerships</strong>: trusting long-term relationships with top performers.</li></ul>" },
+            { topic: "Procurement", q: "What criteria should be considered when selecting suppliers for a new product line?", a: "<ul><li><strong>Quality</strong>: certifications (ISO 9001), defect rates, traceability.</li><li><strong>Cost</strong>: unit price, total cost of ownership, payment terms.</li><li><strong>Delivery & lead time</strong>: reliability, on-time performance.</li><li><strong>Capacity & flexibility</strong>: ability to scale and respond to demand changes.</li><li><strong>Technical capability</strong>: process know-how, R&D, design support.</li><li><strong>Financial stability</strong>: solvency, sustainability of business.</li><li><strong>Geographic location</strong>: logistics cost, lead time, geopolitical risk.</li><li><strong>Sustainability/ESG</strong>: ISO 14001, ethical sourcing, modern-slavery compliance.</li><li><strong>Cultural fit</strong>: communication, alignment, trust.</li><li><strong>Risk profile</strong>: single-source vs. multi-source, dependency.</li></ul>" },
+            { topic: "Procurement", q: "What methods/tools evaluate potential suppliers against criteria?", a: "<ul><li><strong>Weighted scoring matrix</strong> across multiple criteria.</li><li><strong>RFI/RFP/RFQ</strong> (Request for Information/Proposal/Quotation).</li><li><strong>Supplier audits</strong>: on-site quality and capacity assessment.</li><li><strong>Pilot orders/trial runs</strong>.</li><li><strong>Reference checks</strong> with existing customers.</li><li><strong>Financial due diligence</strong>: D&B, Companies House data.</li><li><strong>FMEA on supply risk</strong>; map single-source risk.</li><li><strong>SWOT and Porter's Five Forces</strong> for strategic context.</li><li><strong>Total Cost of Ownership</strong> analysis.</li><li><strong>Sustainability/ESG due diligence</strong>: certificates, audit reports.</li></ul>" },
+            { topic: "Procurement", q: "How can logistics be optimised for timely delivery of components?", a: "<strong>Strategies</strong>: dual sourcing, buffer/safety stock, distribution centres near production, cross-docking, mode mix (air for urgency vs. sea for cost), 3PL/4PL partnerships, RFID/EDI tracking, JIT with reliable suppliers.<br><strong>Challenges and mitigations</strong>: customs delays (free-trade zones, bonded warehouses); transport disruptions (multi-modal options, alternate routes); demand variability (CPFR, S&OP, safety stock); supplier failure (multi-sourcing, supplier development)." },
+            { topic: "Procurement", q: "How does international trade influence supply chain design in engineering industries?", a: "<ul><li><strong>Tariffs & trade agreements</strong> shape sourcing and location decisions (e.g. nearshoring under tariff regimes).</li><li><strong>Customs and regulatory compliance</strong> add lead time and admin cost.</li><li><strong>Currency risk</strong> affects supplier choice and pricing.</li><li><strong>Long lead times by sea</strong> drive higher pipeline inventory; air for urgent / high-value.</li><li><strong>Geopolitical risk</strong> drives diversification (e.g. away from single regions).</li><li><strong>Logistics chokepoints</strong> (Suez, Panama, Hormuz, Malacca) create disruption risk.</li><li><strong>Examples</strong>: automotive sourcing semiconductors globally; aerospace sourcing critical alloys; lithium/cobalt for EVs concentrated in few countries.</li></ul>" },
+            { topic: "Procurement", q: "What key risks affect global supply chains and how can resilience be enhanced?", a: "<strong>Risks</strong>: geopolitical conflict, tariffs/trade wars, pandemics, natural disasters, transport chokepoints, single-source dependency, cyber-attacks, supplier financial distress, sustainability/regulatory change (CBAM, CSDDD), labour disputes, currency volatility.<br><strong>Strategic resilience</strong>: dual/multi-sourcing, nearshoring, regionalised supply chains, strategic stockpiling of critical components, supplier development, vertical integration of critical inputs, contract diversification.<br><strong>Digital tools</strong>: AI/ML for demand sensing and disruption prediction, control towers, end-to-end visibility platforms, digital twins for scenario simulation, blockchain for traceability, RFID/IoT tracking, predictive analytics." },
+            { topic: "Procurement", q: "How have digital technologies changed supply chains?", a: "<ul><li><strong>Real-time visibility</strong> via IoT, GPS, RFID.</li><li><strong>AI/ML</strong> for demand forecasting, anomaly detection, route optimisation.</li><li><strong>Blockchain</strong> for traceability and provenance.</li><li><strong>Digital twins</strong> for scenario simulation.</li><li><strong>Cloud ERP</strong> for cross-firm collaboration.</li><li><strong>Big-data analytics</strong> for cost-to-serve and risk.</li><li><strong>Hyper-automation/robotics</strong> in warehousing and fulfilment.</li><li><strong>3D printing/additive manufacturing</strong> reduces inventory and lead times for spare parts.</li><li><strong>Drones and autonomous vehicles</strong> for last-mile.</li></ul>Result: faster decisions, lower inventory, improved resilience and customer service." },
+            { topic: "Procurement", q: "What advantages do digital enabling technologies bring to supply chains?", a: "<ul><li>Better demand forecasting and matching → reduced bullwhip and inventory.</li><li>End-to-end visibility → faster issue detection and disruption response.</li><li>Predictive maintenance → higher OEE and uptime.</li><li>Traceability and provenance → quality, compliance, sustainability.</li><li>Optimisation across logistics, inventory, production.</li><li>Mass customisation and faster product launches.</li><li>Better collaboration with suppliers and customers (CPFR).</li></ul>" },
+            { topic: "Procurement", q: "What are the barriers to introducing digital technology in supply chains?", a: "<ul><li><strong>Cost</strong>: high CapEx for sensors, infrastructure, software.</li><li><strong>Data quality and integration</strong> across legacy systems.</li><li><strong>Cyber-security</strong> risk and data privacy regulations.</li><li><strong>Skills gap</strong>: lack of trained workforce for analytics/AI.</li><li><strong>Cultural resistance</strong> to change.</li><li><strong>Standards interoperability</strong> between firms.</li><li><strong>ROI uncertainty</strong> and long payback periods.</li><li><strong>Supplier readiness</strong> (especially SMEs).</li></ul>" },
+            { topic: "Procurement", q: "What are the main challenges in managing digital technologies in supply chains?", a: "<ul><li>Maintaining data quality, integrity, and security across many partners.</li><li>Governance: who owns the data and the algorithms?</li><li>Avoiding vendor lock-in.</li><li>Continuous re-training of models as conditions change.</li><li>Managing change and re-skilling staff.</li><li>Ensuring system fidelity (digital twins).</li><li>Ethical use of AI and avoiding bias.</li><li>Aligning digital strategy with overall business strategy and ROI.</li><li>Resilience of digital systems themselves to outages and cyber-attacks.</li></ul>" },
+
+            /* ============================================================
+               FINAL: cross-cutting and exam-style framings
+               ============================================================ */
+            { topic: "Exam-style", q: "How would you take ISO 14001:2015 into consideration for a Li-ion battery manufacturing facility?", a: "<ul><li>Define an Environmental Management System integrated with the QMS.</li><li>Identify environmental aspects/impacts (raw-material extraction, solvent use, energy, water, waste, emissions, end-of-life).</li><li>Set objectives & legal-compliance obligations (CO₂, NOx, hazardous waste, REACH, WEEE, EU Battery Directive).</li><li>Apply PDCA: plan controls, implement, monitor (KPIs, audits), act on findings.</li><li>Life-cycle thinking: influence design, sourcing, use, EoL recycling/recovery.</li><li>Communicate environmental performance to stakeholders.</li><li>Train workforce; assign responsibilities; document procedures and emergency response (e.g. thermal-runaway).</li><li>Continual improvement of energy/water efficiency, dry-room utilisation, solvent recovery, recycling rates.</li></ul>" },
+            { topic: "Exam-style", q: "For batteries, why is the LCA functional unit critical when comparing two chemistries (e.g. NiMH vs. Li-ion)?", a: "Different chemistries deliver different energy/cycle/lifetime, so a 'per battery' comparison misleads. The functional unit must capture <strong>service delivered</strong> — e.g. '1000 batteries of 2000 mAh capacity providing X cycles in an identical smartphone'. The reference flow then accounts for the actual numbers/masses needed to deliver that service over a matched life cycle. This is the only way comparative LCIA is meaningful and ISO 14044 compliant." },
+            { topic: "Exam-style", q: "In a comparative LCIA across multiple impact categories, how do you decide which product has lower overall impact?", a: "<ol><li>For each impact category compute <strong>characterised result</strong> per product.</li><li>Apply <strong>normalisation</strong> (divide by reference, e.g. person-year) → dimensionless.</li><li>Apply <strong>weighting</strong> (sum of weights = 1) → weighted score per category.</li><li>Sum weighted-normalised scores per product → single aggregate.</li><li>Compare aggregates AND present un-weighted normalised values alongside.</li><li>State assumptions/limitations and acknowledge that for public comparative assertions, ISO 14044 forbids using weighting alone.</li></ol>" },
+            { topic: "Exam-style", q: "Justify selection between three suppliers given availability, efficiency, quality, lifetime, and emissions data.", a: "<ol><li>Compute <strong>OEE = Availability × Efficiency × Quality</strong> for each.</li><li>Annualise emissions and energy over the equipment <strong>lifetime</strong>.</li><li>Build a weighted scoring matrix (weights chosen for OEE, energy, CO₂, lifetime cost).</li><li>Consider qualitative factors (supplier risk, support, spares, training).</li><li>Justify the choice citing the highest weighted score AND the strategic fit (e.g. lower CO₂ supports ISO 14001 goals; longer lifetime improves TCO).</li></ol>Always show the working: OEE figures, normalised CO₂/energy, weights, total scores." },
+            { topic: "Exam-style", q: "In manufacturing, why might 100% production capability be difficult to achieve?", a: "<ul><li>Equipment failures and unplanned downtime (reactive maintenance).</li><li>Changeovers and transitions between products/batches.</li><li>Quality losses, rework and scrap.</li><li>Material/component shortages from suppliers.</li><li>Labour issues (sickness, training, shift transitions).</li><li>Yield and rate losses below ideal speed.</li><li>Energy or utility outages.</li><li>Regulatory or environmental compliance stops.</li><li>Cost-prohibitive: 100% requires excessive redundancy, spares, and over-design.</li></ul>" },
+        ];
+
+        /* -------------- DOM and behaviour -------------- */
+        const deck = document.getElementById('deck');
+        const search = document.getElementById('searchBox');
+        const stats = document.getElementById('stats');
+        const topicBar = document.getElementById('topicBar');
+        const noRes = document.getElementById('noResults');
+
+        const topics = [...new Set(cards.map(c => c.topic))];
+        let activeTopic = "All";
+        let allFlipped = false;
+
+        function render() {
+            const q = search.value.trim().toLowerCase();
+            deck.innerHTML = '';
+            let count = 0;
+            cards.forEach((c, i) => {
+                if (activeTopic !== "All" && c.topic !== activeTopic) return;
+                const hay = (c.topic + " " + c.q + " " + c.a).toLowerCase();
+                if (q && !hay.includes(q)) return;
+                count++;
+                const card = document.createElement('div');
+                card.className = 'card' + (allFlipped ? ' flipped' : '');
+                card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-front">
+          <div class="tag">${c.topic} · #${i + 1}</div>
+          <div class="q">${c.q}</div>
+          <div class="flip-hint">click to reveal ↻</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="tag">Answer · #${i + 1}</div>
+          <div class="a">${c.a}</div>
+          <div class="flip-hint">click to flip back ↻</div>
+        </div>
+      </div>`;
+                card.addEventListener('click', () => card.classList.toggle('flipped'));
+                deck.appendChild(card);
+            });
+            stats.textContent = `${count}/${cards.length} cards · ${topics.length} topics`;
+            noRes.style.display = count === 0 ? 'block' : 'none';
+        }
+
+        function buildTopicBar() {
+            topicBar.innerHTML = '';
+            const all = document.createElement('button');
+            all.className = 'topic-btn active';
+            all.textContent = 'All';
+            all.addEventListener('click', () => {
+                activeTopic = "All";
+                [...topicBar.children].forEach(b => b.classList.remove('active'));
+                all.classList.add('active');
+                render();
+            });
+            topicBar.appendChild(all);
+            topics.forEach(t => {
+                const b = document.createElement('button');
+                b.className = 'topic-btn';
+                b.textContent = t;
+                b.addEventListener('click', () => {
+                    activeTopic = t;
+                    [...topicBar.children].forEach(x => x.classList.remove('active'));
+                    b.classList.add('active');
+                    render();
+                });
+                topicBar.appendChild(b);
+            });
+        }
+
+        document.getElementById('shuffleBtn').addEventListener('click', () => {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            render();
+        });
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            search.value = '';
+            activeTopic = 'All';
+            allFlipped = false;
+            [...topicBar.children].forEach((b, i) => b.classList.toggle('active', i === 0));
+            render();
+        });
+        document.getElementById('flipAllBtn').addEventListener('click', () => {
+            allFlipped = !allFlipped;
+            render();
+        });
+        search.addEventListener('input', render);
+
+        buildTopicBar();
+        render();
+    </script>
+</body>
+
+</html>
